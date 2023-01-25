@@ -105,9 +105,7 @@ SELECT * FROM students ORDER BY id
 -- MAGIC 
 -- MAGIC ## 레코드 UPDATE
 -- MAGIC 
--- MAGIC Delta Lake를 사용하면 마치 Database를 사용하는 것처럼 Insert,Update,Delete를 사용해서 손쉽게 데이터셋을 수정할 수 있습니다. 
--- MAGIC 
--- MAGIC UPDATE 작업도 ACID 트랜잭션이 보장됩니다. 
+-- MAGIC Delta Lake를 사용하면 마치 Database를 사용하는 것처럼 insert, update, delete를 사용해서 손쉽게 데이터셋을 수정할 수 있습니다. UPDATE 작업도 ACID 트랜잭션이 보장됩니다. 
 
 -- COMMAND ----------
 
@@ -128,8 +126,6 @@ SELECT * FROM students
 -- MAGIC ## 레코드 DELETE
 -- MAGIC 
 -- MAGIC DELETE 작업도 역시 ACID 트랜잭션이 보장됩니다. 즉, 데이터의 일부만 삭제되어 일관성이 깨지는 것을 걱정할 필요가 없습니다.
--- MAGIC 
--- MAGIC DELETE 구문에 의해 하나 또는 여러 건의 레코드가 삭제될 수 있지만, 이는 항상 단일 트랜잭션 안에서 처리됩니다. 
 
 -- COMMAND ----------
 
@@ -146,7 +142,7 @@ WHERE value > 6
 -- MAGIC 
 -- MAGIC Databricks에서는 **MERGE** 문을 이용하여 upsert (데이터의 Update, Insert 및 기타 데이터 조작을 하나의 명령어로 수행)를 처리할 수 있습니다. 
 -- MAGIC 
--- MAGIC 아래의 예제에서는, 변경사항을 기록하는 CDC(Change Data Capture) 로그 데이터를 updates라는 임시뷰로 생성합니다. 
+-- MAGIC 아래의 예제에서는 변경사항을 기록하는 CDC(Change Data Capture) 로그 데이터를 updates라는 임시 뷰로 생성합니다. 
 
 -- COMMAND ----------
 
@@ -163,12 +159,12 @@ SELECT * FROM updates;
 -- MAGIC %md <i18n value="6fe009d5-513f-4b93-994f-1ae9a0f30a80"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC 이 view에는 레코드들에 대한 3가지 타입- insert,update,delete 명령어 기록을 담고 있습니다.  
--- MAGIC 이 명령어를 각각 수행한다면 3개의 트렌젝션이 되고 만일 이중에 하나라도 실패하게 된다면 invalid한 상태가 될 수 있습니다.  
+-- MAGIC 이 view에는 레코드들에 대한 3가지 타입- Insert, Update, Delete 명령어 기록을 담고 있습니다.  
+-- MAGIC 이 명령어를 각각 수행한다면 3개의 트랜잭션이 되고 만일 이중에 하나라도 실패하게 된다면 invalid한 상태가 될 수 있습니다.  
 -- MAGIC 대신에 이 3가지 action을 하나의 atomic 트랜잭션으로 묶어서 한꺼번에 적용되도록 합니다.  
 -- MAGIC <br>
--- MAGIC **`MERGE`**  문은 최소한 하나의 기준 field (여기서는 id)를 가지고 각 **`WHEN MATCHED`** 이나 **`WHEN NOT MATCHED`**  구절은 여러 조건값들을 가질 수 있습니다.  
--- MAGIC **id** 필드를 기준으로 **type** 필드값에 따라서 각 record에 대해서 update,delete,insert문을 수행하게 됩니다. 
+-- MAGIC **`MERGE`**  문은 최소한 하나의 기준 field (여기서는 id)를 가지며, 각 **`WHEN MATCHED`** 이나 **`WHEN NOT MATCHED`**  구절은 여러 조건값들을 가질 수 있습니다.  
+-- MAGIC **id** 필드를 기준으로 **type** 필드값에 따라서 각 record에 대해서 update, delete, insert문을 수행하게 됩니다. 
 
 -- COMMAND ----------
 
