@@ -325,6 +325,13 @@ VACUUM students RETAIN 0 HOURS
 
 -- COMMAND ----------
 
+-- MAGIC %md
+-- MAGIC ## Summary
+-- MAGIC 
+-- MAGIC Delta Lake 는 Cloud storage 기반의 데이터 레이크 환경에서 데이터 신뢰성 보장과 성능 향상의 메커니즘을 제공합니다.
+
+-- COMMAND ----------
+
 -- MAGIC %md-sandbox
 -- MAGIC &copy; 2023 Databricks, Inc. All rights reserved.<br/>
 -- MAGIC Apache, Apache Spark, Spark and the Spark logo are trademarks of the <a href="https://www.apache.org/">Apache Software Foundation</a>.<br/>
