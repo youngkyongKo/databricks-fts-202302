@@ -12,20 +12,16 @@
 -- MAGIC 
 -- MAGIC # Advanced Delta Lake Features
 -- MAGIC 
--- MAGIC Now that you feel comfortable performing basic data tasks with Delta Lake, we can discuss a few features unique to Delta Lake.
+-- MAGIC Delta Lake 테이블이 제공하는 고유한 기능들을 살펴 보겠습니다.  
 -- MAGIC 
--- MAGIC Note that while some of the keywords used here aren't part of standard ANSI SQL, all Delta Lake operations can be run on Databricks using SQL
+-- MAGIC * **`OPTIMIZE`** 구문을 이용하여 자잘한 파일들을 적절한 크기로 최적화 (compaction) 
+-- MAGIC * **`ZORDER`**  구문을 이용한 테이블 인덱싱
+-- MAGIC * Delta Lake 테이블의 디렉토리 구조 살펴보기
+-- MAGIC * 테이블 트랜잭션 이력 조회
+-- MAGIC * 테이블의 이전 버전 데이터를 조회하거나 해당 버전으로 롤백
+-- MAGIC * **`VACUUM`** 을 이용하여 오래된 데이터 정리 
 -- MAGIC 
--- MAGIC ## Learning Objectives
--- MAGIC By the end of this lesson, you should be able to:
--- MAGIC * Use **`OPTIMIZE`** to compact small files
--- MAGIC * Use **`ZORDER`** to index tables
--- MAGIC * Describe the directory structure of Delta Lake files
--- MAGIC * Review a history of table transactions
--- MAGIC * Query and roll back to previous table version
--- MAGIC * Clean up stale data files with **`VACUUM`**
--- MAGIC 
--- MAGIC **Resources**
+-- MAGIC **참조문서**
 -- MAGIC * <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-optimize.html" target="_blank">Delta Optimize - Databricks Docs</a>
 -- MAGIC * <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-vacuum.html" target="_blank">Delta Vacuum - Databricks Docs</a>
 
@@ -34,8 +30,7 @@
 -- MAGIC %md <i18n value="75224cfc-51b5-4c3d-8eb3-4db08469c99f"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Run Setup
--- MAGIC The first thing we're going to do is run a setup script. It will define a username, userhome, and database that is scoped to each user.
+-- MAGIC ## 실습 환경 설정
 
 -- COMMAND ----------
 
@@ -45,12 +40,9 @@
 
 -- MAGIC %md <i18n value="7e85feea-be41-41f7-9cd7-df2c140d6286"/>
 -- MAGIC 
+-- MAGIC ## Delta Lake 테이블 생성 후 데이터 작업
 -- MAGIC 
--- MAGIC ## Creating a Delta Table with History
--- MAGIC 
--- MAGIC The cell below condenses all the transactions from the previous lesson into a single cell. (Except for the **`DROP TABLE`**!)
--- MAGIC 
--- MAGIC As you're waiting for this query to run, see if you can identify the total number of transactions being executed.
+-- MAGIC 이전 노트북에서 수행했던 작업들을 다시 실행해 봅시다.
 
 -- COMMAND ----------
 
@@ -94,12 +86,11 @@ WHEN NOT MATCHED AND u.type = "insert"
 
 -- MAGIC %md <i18n value="5f6b0330-42f2-4307-9ff2-0b534947b286"/>
 -- MAGIC 
+-- MAGIC ## 테이블 정보 살펴보기 
 -- MAGIC 
--- MAGIC ## Examine Table Details
+-- MAGIC database, table, view 에 대한 정보는 디폴트로 Hive metastore 에 저장됩니다. 
 -- MAGIC 
--- MAGIC Databricks uses a Hive metastore by default to register databases, tables, and views.
--- MAGIC 
--- MAGIC Using **`DESCRIBE EXTENDED`** allows us to see important metadata about our table.
+-- MAGIC **`DESCRIBE EXTENDED`** 구문을 이용하여 테이블의 metadata 를 살펴 봅시다. 
 
 -- COMMAND ----------
 
@@ -109,8 +100,7 @@ DESCRIBE EXTENDED students
 
 -- MAGIC %md <i18n value="5495f382-2841-4cf5-b872-db4dd3828ee5"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC **`DESCRIBE DETAIL`** is another command that allows us to explore table metadata.
+-- MAGIC 다른 방법으로, **`DESCRIBE DETAIL`** 구문을 이용하여 테이블 metadata 를 조회할 수 있습니다. 
 
 -- COMMAND ----------
 
@@ -120,21 +110,13 @@ DESCRIBE DETAIL students
 
 -- MAGIC %md <i18n value="4ab0fa4f-72cb-4f3b-8ea3-228b13be1baf"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC Note the **`Location`** field.
--- MAGIC 
--- MAGIC While we've so far been thinking about our table as just a relational entity within a database, a Delta Lake table is actually backed by a collection of files stored in cloud object storage.
+-- MAGIC **`Location`** 필드에서 해당 테이블을 구성하는 파일들의 저장 경로를 확인할 수 있습니다. 
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="10e37764-bbfd-4669-a967-addd58041d47"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC ## Explore Delta Lake Files
--- MAGIC 
--- MAGIC We can see the files backing our Delta Lake table by using a Databricks Utilities function.
--- MAGIC 
--- MAGIC **NOTE**: It's not important right now to know everything about these files to work with Delta Lake, but it will help you gain a greater appreciation for how the technology is implemented.
+-- MAGIC ## Delta Lake 파일들 살펴보기 
 
 -- COMMAND ----------
 
@@ -145,14 +127,11 @@ DESCRIBE DETAIL students
 
 -- MAGIC %md <i18n value="075483eb-7ddd-46ef-bbb1-33ee7005923b"/>
 -- MAGIC 
+-- MAGIC 테이블 저장 경로 디렉토리에는 parquet 포맷의 데이터 파일들과 **`_delta_log`** 디렉토리가 있습니다.  
 -- MAGIC 
--- MAGIC Note that our directory contains a number of Parquet data files and a directory named **`_delta_log`**.
+-- MAGIC Delta Lake 테이블의 레코드들은 parquet 파일로 저장됩니다. 
 -- MAGIC 
--- MAGIC Records in Delta Lake tables are stored as data in Parquet files.
--- MAGIC 
--- MAGIC Transactions to Delta Lake tables are recorded in the **`_delta_log`**.
--- MAGIC 
--- MAGIC We can peek inside the **`_delta_log`** to see more.
+-- MAGIC Delta Lake 테이블의 트랜잭션 기록들은 **`_delta_log`** 디렉토리 아래에 저장됩니다. 이 디렉토리를 좀 더 살펴 봅시다.
 
 -- COMMAND ----------
 
@@ -163,19 +142,17 @@ DESCRIBE DETAIL students
 
 -- MAGIC %md <i18n value="1bcbb8d1-f871-451a-ad16-762dfa91c0a3"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC Each transaction results in a new JSON file being written to the Delta Lake transaction log. Here, we can see that there are 8 total transactions against this table (Delta Lake is 0 indexed).
+-- MAGIC 각각의 트랜잭션 로그들은 버전별 JSON 파일로 저장됩니다. 여기서는 8개의 트랜잭션 로그 파일을 볼 수 있습니다. (버전은 0부터 시작합니다) 
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="c2fbd6d7-ea8e-4000-9702-e21408f3ef78"/>
 -- MAGIC 
+-- MAGIC ## 데이터 파일 살펴보기
 -- MAGIC 
--- MAGIC ## Reasoning about Data Files
+-- MAGIC students 테이블은 매우 작은 테이블이지만 많은 수의 데이터 파일로 이루어져 있습니다. 
 -- MAGIC 
--- MAGIC We just saw a lot of data files for what is obviously a very small table.
--- MAGIC 
--- MAGIC **`DESCRIBE DETAIL`** allows us to see some other details about our Delta table, including the number of files.
+-- MAGIC **`DESCRIBE DETAIL`** 구문으로 파일 갯수(numFiles)를 살펴 봅시다. 
 
 -- COMMAND ----------
 
@@ -185,12 +162,11 @@ DESCRIBE DETAIL students
 
 -- MAGIC %md <i18n value="adf1dc55-37a4-4376-86df-78895bfcf6b8"/>
 -- MAGIC 
+-- MAGIC metadata 조회 결과, students 테이블의 현재 버전에는 4개의 데이터 파일이 있습니다 (numFiles=4). 그럼 테이블 디렉토리에 있는 다른 parquet 파일들은 무엇일까요?  
 -- MAGIC 
--- MAGIC Here we see that our table currently contains 4 data files in its present version. So what are all those other Parquet files doing in our table directory? 
+-- MAGIC Delta Lake는 변경된 데이터를 담고 있는 파일들을 overwrite 하거나 즉시 삭제하지 않고, 해당 버전에서 유효한 데이터 파일들을 트랜잭션 로그에 기록합니다.     
 -- MAGIC 
--- MAGIC Rather than overwriting or immediately deleting files containing changed data, Delta Lake uses the transaction log to indicate whether or not files are valid in a current version of the table.
--- MAGIC 
--- MAGIC Here, we'll look at the transaction log corresponding the **`MERGE`** statement above, where records were inserted, updated, and deleted.
+-- MAGIC 예를 들어 위의 **`MERGE`** 구문이 수행된 트랜잭션 로그를 살펴 봅시다. 
 
 -- COMMAND ----------
 
@@ -201,25 +177,24 @@ DESCRIBE DETAIL students
 
 -- MAGIC %md <i18n value="85e8bce8-c168-4ac6-9835-f694cab5b43c"/>
 -- MAGIC 
+-- MAGIC **`add`** 컬럼에는 테이블에 새롭게 추가된 파일들의 정보가 담겨 있고, **`remove`** 컬럼에는 이 트랜잭션으로 삭제 처리된 파일들이 표시되어 있습니다.
 -- MAGIC 
--- MAGIC The **`add`** column contains a list of all the new files written to our table; the **`remove`** column indicates those files that no longer should be included in our table.
--- MAGIC 
--- MAGIC When we query a Delta Lake table, the query engine uses the transaction logs to resolve all the files that are valid in the current version, and ignores all other data files.
+-- MAGIC Delta Lake 테이블을 쿼리할 때, 쿼리엔진은 이 트랜잭션 로그를 이용하여 현재 버전에서 유효한 파일들을 알아내고 그 외의 데이터 파일들은 무시합니다.
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="c69bbf45-e75e-419f-a149-fd18f76daab6"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Compacting Small Files and Indexing
+-- MAGIC ## 작은 파일들의 최적화 (Compaction) 과 인덱싱
 -- MAGIC 
--- MAGIC Small files can occur for a variety of reasons; in our case, we performed a number of operations where only one or several records were inserted.
+-- MAGIC 이런저런 작업을 하다 보면 작은 데이터 파일들이 많이 생성되는 경우가 종종 발생합니다. 이와 같이 작은 파일들이 많은 경우 처리 성능 저하의 원인이 될 수 있습니다.
 -- MAGIC 
--- MAGIC Files will be combined toward an optimal size (scaled based on the size of the table) by using the **`OPTIMIZE`** command.
+-- MAGIC **`OPTIMIZE`** 명령어는 기존의 데이터 파일내의 레코드들을 합쳐서 새로 최적의 사이즈로 파일을 만들고, 기존의 작은 파일들을 읽기 성능이 좋은 큰 파일들로 대체합니다.
 -- MAGIC 
--- MAGIC **`OPTIMIZE`** will replace existing data files by combining records and rewriting the results.
+-- MAGIC 이 때 하나 이상의 필드를 지정해서 **`ZORDER`** 인덱싱을 함께 수행할 수 있습니다.
 -- MAGIC 
--- MAGIC When executing **`OPTIMIZE`**, users can optionally specify one or several fields for **`ZORDER`** indexing. While the specific math of Z-order is unimportant, it speeds up data retrieval when filtering on provided fields by colocating data with similar values within data files.
+-- MAGIC Z-Ordering은 관련 정보를 동일한 파일 집합에 배치하여, 쿼리 실행시 읽어야 하는 데이터의 양을 줄여 성능을 향상 시키는 기술입니다. 쿼리 조건에 자주 사용되고 해당 열에 높은 카디널리티(distinct 값이 많은)가 있는 경우 ZORDER BY를 사용하면 효과적입니다.
 
 -- COMMAND ----------
 
@@ -228,19 +203,11 @@ ZORDER BY id
 
 -- COMMAND ----------
 
--- MAGIC %md <i18n value="15475907-e307-491c-9bab-4d8afc363ec5"/>
--- MAGIC 
--- MAGIC 
--- MAGIC Given how small our data is, **`ZORDER`** does not provide any benefit, but we can see all of the metrics that result from this operation.
-
--- COMMAND ----------
-
 -- MAGIC %md <i18n value="5684dfb4-0b33-49f1-a4f8-cb2f8d88bf09"/>
 -- MAGIC 
+-- MAGIC ## Time Travel
 -- MAGIC 
--- MAGIC ## Reviewing Delta Lake Transactions
--- MAGIC 
--- MAGIC Because all changes to the Delta Lake table are stored in the transaction log, we can easily review the <a href="https://docs.databricks.com/spark/2.x/spark-sql/language-manual/describe-history.html" target="_blank">table history</a>.
+-- MAGIC Delta Lake 테이블의 모든 변경 이력은 트랜잭션 로그에 저장되므로, **`DESCRIBE HISTORY`** 구문을 통해 <a href="https://docs.databricks.com/spark/2.x/spark-sql/language-manual/describe-history.html" target="_blank">table history</a> 를 쉽게 조회할 수 있습니다.
 
 -- COMMAND ----------
 
@@ -250,48 +217,35 @@ DESCRIBE HISTORY students
 
 -- MAGIC %md <i18n value="56de8919-b5d0-4d1f-81d8-ccf22fdf6da0"/>
 -- MAGIC 
+-- MAGIC **`OPTIMIZE`** 명령에 의해 새로운 버전(version 8)이 추가되어 students 테이블의 최신 버전이 된 것을 볼 수 있습니다. 
 -- MAGIC 
--- MAGIC As expected, **`OPTIMIZE`** created another version of our table, meaning that version 8 is our most current version.
--- MAGIC 
--- MAGIC Remember all of those extra data files that had been marked as removed in our transaction log? These provide us with the ability to query previous versions of our table.
--- MAGIC 
--- MAGIC These time travel queries can be performed by specifying either the integer version or a timestamp.
--- MAGIC 
--- MAGIC **NOTE**: In most cases, you'll use a timestamp to recreate data at a time of interest. For our demo we'll use version, as this is deterministic (whereas you may be running this demo at any time in the future).
+-- MAGIC 트랜잭션 로그에서 removed 로 마킹된 예전 데이터 파일들이 삭제되지 않고 남아 있으므로, 이를 이용하여 테이블의 과거 버전 데이터를 조회할 수 있습니다. 아래와 같이 버전 번호나 timestamp를 지정하여 Time travel을 수행할 수 있습니다.  
 
 -- COMMAND ----------
 
 SELECT * 
 FROM students VERSION AS OF 3
 
+-- SELECT * FROM students@v3;
+-- SELECT * FROM students TIMESTAMP AS OF '2023-02-01 00:05:00';
+
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="0499f01b-7700-4381-80cc-9b4fb093017a"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC What's important to note about time travel is that we're not recreating a previous state of the table by undoing transactions against our current version; rather, we're just querying all those data files that were indicated as valid as of the specified version.
+-- MAGIC Time travel 은 현재 버전에서 트랜잭션을 undo 하거나 과거 상태의 데이터를 다시 생성하는 방식이 아니라, 트랜잭션 로그를 이용하여 해당 버전에서 유효한 파일들을 찾아낸 후, 이들을 쿼리하는 방식으로 이루어 집니다.
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="f569a57f-24cc-403a-88ab-709b4f1a7548"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Rollback Versions
--- MAGIC 
--- MAGIC Suppose you're typing up query to manually delete some records from a table and you accidentally execute this query in the following state.
+-- MAGIC ## 과거 버전으로 Rollback 하기
 
 -- COMMAND ----------
 
+-- 실수로 모든 레코드를 삭제한 상황을 가정해 봅시다.
 DELETE FROM students
-
--- COMMAND ----------
-
--- MAGIC %md <i18n value="b7d46e40-1c41-4e8a-8f25-25325da065cb"/>
--- MAGIC 
--- MAGIC 
--- MAGIC Note that when we see a **`-1`** for number of rows affected by a delete, this means an entire directory of data has been removed.
--- MAGIC 
--- MAGIC Let's confirm this below.
 
 -- COMMAND ----------
 
@@ -301,8 +255,7 @@ SELECT * FROM students
 
 -- MAGIC %md <i18n value="0477fb25-7248-4552-98a1-ffee4cd7b5b0"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC Deleting all the records in your table is probably not a desired outcome. Luckily, we can simply rollback this commit.
+-- MAGIC 삭제 커밋이 수행되기 이전 버전으로 rollback 해 봅시다.
 
 -- COMMAND ----------
 
@@ -312,23 +265,20 @@ RESTORE TABLE students TO VERSION AS OF 8
 
 -- MAGIC %md <i18n value="4fbc3b91-8b73-4644-95cb-f9ca2f1ac6a3"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC Note that a **`RESTORE`** <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-restore.html" target="_blank">command</a> is recorded as a transaction; you won't be able to completely hide the fact that you accidentally deleted all the records in the table, but you will be able to undo the operation and bring your table back to a desired state.
+-- MAGIC 테이블 히스토리를 조회(DESCRIBE HISTORY)해 보면 <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-restore.html" target="_blank">RESTORE</a> 명령이 트랜잭션으로 기록됨을 볼 수 있습니다.
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="789ca5cf-5eb1-4a81-a595-624994a512f1"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Cleaning Up Stale Files
+-- MAGIC ## Stale File 정리하기
 -- MAGIC 
--- MAGIC Databricks will automatically clean up stale files in Delta Lake tables.
+-- MAGIC Delta Lake의 Versioning과 Time Travel은 과거 버전을 조회하고 실수했을 경우 데이터를 rollback하는 매우 유용한 기능이지만, 데이터 파일의 모든 버전을 영구적으로 저장하는 것은 스토리지 비용이 많이 들게 됩니다. 또한 개인정보 관련 규정에 따라 데이터를 명시적으로 삭제해야 할 경우도 있습니다. 
 -- MAGIC 
--- MAGIC While Delta Lake versioning and time travel are great for querying recent versions and rolling back queries, keeping the data files for all versions of large production tables around indefinitely is very expensive (and can lead to compliance issues if PII is present).
+-- MAGIC **`VACUUM`** 을 이용하여 Delta Lake Table 에서 불필요한 데이터 파일들을 정리할 수 있습니다. 
 -- MAGIC 
--- MAGIC If you wish to manually purge old data files, this can be performed with the **`VACUUM`** operation.
--- MAGIC 
--- MAGIC Uncomment the following cell and execute it with a retention of **`0 HOURS`** to keep only the current version:
+-- MAGIC **`VACUUM`** 명령을 수행하면 지정한 retention 기간 이전으로 더이상 여행할 수 없게 됩니다.  
 
 -- COMMAND ----------
 
@@ -338,38 +288,24 @@ RESTORE TABLE students TO VERSION AS OF 8
 
 -- MAGIC %md <i18n value="6a3b0b37-1387-4b41-86bf-3f181ddc1562"/>
 -- MAGIC 
+-- MAGIC 기본값으로 VACUUM 은 7일 미만의 데이터를 삭제하지 못하도록 설정되어 있으며, 이는 아직 사용중이거나 커밋되지 않은 파일이 삭제되어 데이터가 손상되는 것을 방지하기 위함입니다. 
 -- MAGIC 
--- MAGIC By default, **`VACUUM`** will prevent you from deleting files less than 7 days old, just to ensure that no long-running operations are still referencing any of the files to be deleted. If you run **`VACUUM`** on a Delta table, you lose the ability time travel back to a version older than the specified data retention period.  In our demos, you may see Databricks executing code that specifies a retention of **`0 HOURS`**. This is simply to demonstrate the feature and is not typically done in production.  
--- MAGIC 
--- MAGIC In the following cell, we:
--- MAGIC 1. Turn off a check to prevent premature deletion of data files
--- MAGIC 1. Make sure that logging of **`VACUUM`** commands is enabled
--- MAGIC 1. Use the **`DRY RUN`** version of vacuum to print out all records to be deleted
+-- MAGIC 아래의 예제는 이 기본 설정을 무시하고 가장 최근 버전 데이터만 남기고 모든 과거 버전의 stale file을 정리하는 예제입니다.
 
 -- COMMAND ----------
 
 SET spark.databricks.delta.retentionDurationCheck.enabled = false;
 SET spark.databricks.delta.vacuum.logging.enabled = true;
 
-VACUUM students RETAIN 0 HOURS DRY RUN
-
--- COMMAND ----------
-
--- MAGIC %md <i18n value="be50e096-ba08-43be-8056-d56ad5ae7914"/>
--- MAGIC 
--- MAGIC 
--- MAGIC By running **`VACUUM`** and deleting the 10 files above, we will permanently remove access to versions of the table that require these files to materialize.
-
--- COMMAND ----------
-
+-- DRY RUN 을 이용하여 VACUUM 실행시 삭제될 파일들을 미리 파악할 수 있습니다.   
+-- VACUUM students RETAIN 0 HOURS DRY RUN
 VACUUM students RETAIN 0 HOURS
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="a847e55a-0ecf-4b10-85ab-5aa8566ff4e1"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC Check the table directory to show that files have been successfully deleted.
+-- MAGIC 테이블 디렉토리에서 데이터 파일들이 정상적으로 삭제되었는지 확인해 봅시다.
 
 -- COMMAND ----------
 
@@ -380,8 +316,7 @@ VACUUM students RETAIN 0 HOURS
 
 -- MAGIC %md <i18n value="b854a50f-635b-4cdc-8f18-38c5ab595648"/>
 -- MAGIC 
--- MAGIC  
--- MAGIC Run the following cell to delete the tables and files associated with this lesson.
+-- MAGIC ## 실습 환경 정리
 
 -- COMMAND ----------
 
