@@ -75,8 +75,13 @@ currentUser = spark.sql("SELECT current_user()").collect()[0][0]
 
 # COMMAND ----------
 
+display(currentUser)
+
+# COMMAND ----------
+
 # MAGIC %python
-# MAGIC display(dbutils.fs.ls(f"/user/{currentUser}/dbacademy/dewd/7.1/source/tracker/"))
+# MAGIC # display(dbutils.fs.ls(f"/user/{currentUser}/dbacademy/dewd/7.1/source/tracker/"))
+# MAGIC display(dbutils.fs.ls(f"/mnt/dbacademy-users/{currentUser}/data-engineering-with-databricks/source/tracker/"))
 
 # COMMAND ----------
 
@@ -125,6 +130,11 @@ currentUser = spark.sql("SELECT current_user()").collect()[0][0]
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC select count(1) from recordings_bronze_temp;
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC 
 # MAGIC 
@@ -160,7 +170,7 @@ DA.data_factory.load()
 # COMMAND ----------
 
 # MAGIC %python
-# MAGIC display(dbutils.fs.ls(f"/user/{currentUser}/dbacademy/dewd/7.1/source/tracker/"))
+# MAGIC display(dbutils.fs.ls(f"/mnt/dbacademy-users/{currentUser}/data-engineering-with-databricks/source/tracker/"))
 
 # COMMAND ----------
 
@@ -174,7 +184,7 @@ DA.data_factory.load()
       .format("csv")
       .schema("mrn STRING, name STRING")
       .option("header", True)
-      .load(f"{DA.paths.data_source}/patient/patient_info.csv")
+      .load(f"{DA.paths.datasets}/healthcare/patient/patient_info.csv")
       .createOrReplaceTempView("pii"))
 
 # COMMAND ----------
@@ -188,10 +198,10 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC 
 # MAGIC ## Silver Table: sensor recording 데이터 Enrich
-# MAGIC 두번째 단계에서 우리는 아래 enrichment작업들을 수행할 것입니다:
+# MAGIC 두번째 단계에서 우리는 아래 enrichment 작업들을 수행할 것입니다:
 # MAGIC - PII 데이터와 조인해서 환자 이름을 추가 
 # MAGIC - sensor 데이터내의 사람이 읽을 수 있는  **`'yyyy-MM-dd HH:mm:ss'`** 포맷으로 timestamp 파싱
-# MAGIC - heart rate가 0보다 작은 row는 삭제(쓰레기데이터로 판단)
+# MAGIC - heart rate가 0보다 작은 row는 삭제(Garbage 데이터로 판단)
 
 # COMMAND ----------
 
@@ -247,7 +257,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC ## Gold Table: 일평균 
 # MAGIC 
-# MAGIC 이제 **`recordings_enriched`** 테이블에서 데이터 스트림을 읽어서 각 환자별 일 평균 heart rate을 계산하는 aggregate golden 테이블을 만들자.
+# MAGIC 이제 **`recordings_enriched`** 테이블에서 데이터 스트림을 읽어서 각 환자별 일 평균 heart rate을 계산하는 집계된 gold 테이블을 만듭니다.
 
 # COMMAND ----------
 
@@ -262,6 +272,11 @@ DA.data_factory.load()
 # MAGIC   SELECT mrn, name, mean(heartrate) avg_heartrate, date_trunc("DD", time) date
 # MAGIC   FROM recordings_enriched_temp
 # MAGIC   GROUP BY mrn, name, date_trunc("DD", time))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from patient_avg;
 
 # COMMAND ----------
 

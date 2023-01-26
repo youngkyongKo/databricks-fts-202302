@@ -163,7 +163,7 @@ AS
 -- MAGIC * Schema
 -- MAGIC * Data quality metrics
 -- MAGIC 
--- MAGIC Refer to this <a href="$./DE 8.3 - Pipeline Results" target="_blank">companion notebook</a> to inspect tables and logs.
+-- MAGIC Refer to this <a href="$./3. Pipeline Results" target="_blank">companion notebook</a> to inspect tables and logs.
 
 -- COMMAND ----------
 

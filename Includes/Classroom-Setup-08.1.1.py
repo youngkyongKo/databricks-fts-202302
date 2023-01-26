@@ -18,7 +18,7 @@ def get_dlt_policy(self):
 @DBAcademyHelper.monkey_patch
 def get_pipeline_config(self):
     path = dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().getOrElse(None)
-    path = "/".join(path.split("/")[:-1]) + "/DE 8.1.2 - SQL for Delta Live Tables"
+    path = "/".join(path.split("/")[:-1]) + "/2. SQL for Delta Live Tables"
     
     return f"DLT-Demo-81-{DA.username}", path
 
