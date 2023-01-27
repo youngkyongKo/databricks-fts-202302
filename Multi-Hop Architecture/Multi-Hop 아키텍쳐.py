@@ -17,7 +17,7 @@
 # MAGIC 
 # MAGIC ## Incremental Updates in the Lakehouse
 # MAGIC 
-# MAGIC Delta Lake를 사용하면 사용자가 통합 Multi-Hop 파이프라인에서 스트리밍 및 배치 워크로드를 쉽게 결합할 수 있습니다. 파이프라인의 각 단계는 비즈니스 내에서 핵심 use case를 추진하는 데 중요한 데이터 상태를 나타냅니다. 모든 데이터와 메타데이터는 클라우드의 객체 스토리지에 있기 때문에 여러 사용자와 애플리케이션이 준 실시간(near-real time)으로 데이터에 액세스할 수 있으므로 분석가는 처리 중인 최신 데이터에 액세스할 수 있습니다.
+# MAGIC Delta Lake를 사용하면 사용자가 통합된 Multi-Hop 파이프라인에서 스트리밍 및 배치 워크로드를 쉽게 결합할 수 있습니다. 파이프라인의 각 단계는 비즈니스 내에서 핵심 use case를 추진하는 데 중요한 데이터 상태를 나타냅니다. 모든 데이터와 메타데이터는 클라우드의 객체 스토리지에 있기 때문에 여러 사용자와 애플리케이션이 준 실시간(near-real time)으로 데이터에 액세스할 수 있으므로 분석가는 처리 중인 최신 데이터에 액세스할 수 있습니다.
 # MAGIC 
 # MAGIC ![](https://files.training.databricks.com/images/sslh/multi-hop-simple.png)
 # MAGIC 
@@ -62,7 +62,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Setup
-# MAGIC %run ../Includes/Classroom-Setup-07.1
+# MAGIC %run ../Includes/Classroom-Setup-07.1   
 
 # COMMAND ----------
 
@@ -93,7 +93,7 @@ display(currentUser)
 # MAGIC 아래의 코드는 위 경로에 적재된 JSON파일을 autoloader를 사용해서 읽는 예제입니다. 
 # MAGIC Spark Dataframe API를 써서 incremental read를 설정하고, 데이터에 대해서 쉽게 접근하기 위해서 temp view를 우선 생성했습니다. 
 # MAGIC 
-# MAGIC **NOTE**: For a JSON data source, Auto Loader will default to inferring each column as a string. Here, we demonstrate specifying the data type for the **`time`** column using the **`cloudFiles.schemaHints`** option. Note that specifying improper types for a field will result in null values.
+# MAGIC **Note**: JSON 데이터 소스의 경우 Auto Loader는 기본적으로 각 열을 문자열로 유추합니다. 여기서는 **`cloudFiles.schemaHints`** 옵션을 사용하여 **`time`** 열의 데이터 타입을 지정하는 방법을 보여줍니다. 필드에 대해 부적절한 타입을 지정하면 null 값이 생성됩니다.
 
 # COMMAND ----------
 
@@ -113,7 +113,7 @@ display(currentUser)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 여기서는 원본 데이터에 추가적인 metadata를 넣어서 해당 raw가 어느 파일에서 언제 수집되었는지의 정보를 추가합니다. 이 정보는 실제 쿼리에서는 사용되지 않고 debugging/참고 용도로 사용하도록 하겠습니다. 
+# MAGIC 여기서는 원본 데이터에 추가적인 metadata를 넣어서 해당 raw 데이터가 어느 파일에서 언제 수집되었는지의 정보를 추가합니다. 이 정보는 실제 쿼리에서는 사용되지 않고 debugging/참고 용도로 사용하도록 하겠습니다. 
 
 # COMMAND ----------
 
@@ -138,7 +138,7 @@ display(currentUser)
 # MAGIC %md
 # MAGIC 
 # MAGIC 
-# MAGIC 아래 코드는 원시 데이터를 PySpark API로 다시 전달하여 Delta Lake 테이블에 대한 증분 쓰기를 처리합니다.
+# MAGIC 아래 코드는 raw 데이터를 PySpark API로 다시 전달하여 Delta Lake 테이블에 대한 증분 쓰기를 처리합니다.
 
 # COMMAND ----------
 
@@ -155,7 +155,11 @@ display(currentUser)
 # MAGIC %md
 # MAGIC 
 # MAGIC 
-# MAGIC 다음 셀을 사용하여 다른 파일 도착을 트리거하면 작성한 스트리밍 쿼리에서 즉시 감지된 변경 사항을 볼 수 있습니다.
+# MAGIC 다음 셀을 실행하여 새로운 파일을 해당 디렉토리에 로드하는 코드를 트리거하여 위에서 작성한 스트리밍 쿼리에서 즉시 감지된 변경 사항을 볼 수 있습니다.
+
+# COMMAND ----------
+
+DA.data_factory.load()
 
 # COMMAND ----------
 
@@ -171,6 +175,11 @@ DA.data_factory.load()
 
 # MAGIC %python
 # MAGIC display(dbutils.fs.ls(f"/mnt/dbacademy-users/{currentUser}/data-engineering-with-databricks/source/tracker/"))
+
+# COMMAND ----------
+
+# MAGIC %fs
+# MAGIC ls /mnt/dbacademy-users/edward.shin@databricks.com/data-engineering-with-databricks/source/tracker
 
 # COMMAND ----------
 
