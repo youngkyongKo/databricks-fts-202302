@@ -12,7 +12,7 @@
 # MAGIC 
 # MAGIC # Incremental Multi-Hop in the Lakehouse
 # MAGIC 
-# MAGIC 이 노트북에서는 Spark Structured Streaming 과 Delta Lake를 사용해서 통합된 Multi Hop 파이프라인에서 손쉽게 streaming 과 batch workload를 합치는 방법에 대해서 다룹니다.
+# MAGIC 이 노트북에서는 Spark Structured Streaming 과 Delta Lake를 사용해서 통합된 Multi Hop 파이프라인에서 손쉽게 streaming 과 batch workload를 수행하는 방법에 대해서 다룹니다.
 # MAGIC 
 # MAGIC ## Learning Objectives
 # MAGIC 이 단원을 마치면 다음을 수행할 수 있습니다.
@@ -40,7 +40,7 @@
 # MAGIC 
 # MAGIC ETL 파이프라인의 모든 단계에서 비즈니스 logic을 고려함으로써 불필요한 데이터 중복을 줄이고 전체 히스토리 데이터에 대한 adhoc 쿼리를 제한하여 스토리지 및 컴퓨팅 비용을 최적화할 수 있습니다.
 # MAGIC 
-# MAGIC 각 단계는 배치 또는 스트리밍 작업으로 구성할 수 있으며 ACID 트랜잭션은 우리가 완전히 성공하거나 실패하는지 보장합니다.
+# MAGIC 각 단계는 배치 또는 스트리밍 작업으로 구성할 수 있으며 ACID 트랜잭션은 작업이 완전히 성공하거나 실패하는지를 보장합니다.
 
 # COMMAND ----------
 
@@ -52,7 +52,7 @@
 # MAGIC 이 데모는 인위적으로 생성된 단순화된 의료 데이터를 사용합니다. 두 데이터 세트의 스키마는 다음과 같습니다. 다양한 단계에서 해당 스키마를 다뤄 보도록 할 것입니다.
 # MAGIC 
 # MAGIC #### Recordings
-# MAGIC 기본 데이터 세트는 JSON 형식으로 제공되는 의료 기기의 심박수 기록을 사용합니다.
+# MAGIC 기본 데이터 세트는 JSON 형식으로 제공되는 의료 기기의 심박수 데이터를 사용합니다.
 # MAGIC 
 # MAGIC | Field | Type |
 # MAGIC | --- | --- |
@@ -105,8 +105,6 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC 아래에서는 스키마 추론과 함께 Auto Loader를 사용하여 Raw 데이터인 JSON 소스에 대한 읽기를 구성합니다.
 # MAGIC 
-# MAGIC 증분 읽기를 설정하려면 Spark DataFrame API를 사용해야 하지만 일단 구성된 후에는 Temp View 를 즉시 생성하여 데이터에 대한 스트리밍 Transformation을 위해 Spark SQL을 활용할 수 있습니다.
-# MAGIC 
 # MAGIC **참고**: JSON 데이터 소스의 경우 Auto Loader는 기본적으로 각 열을 문자열로 유추합니다. 여기서는 **`cloudFiles.schemaHints`** 옵션을 사용하여 **`time`** 열의 데이터 유형을 지정하는 방법을 보여줍니다. 필드에 대해 부적절한 타입을 지정하면 null 값이 생성됩니다.
 
 # COMMAND ----------
@@ -152,6 +150,11 @@ DA.data_factory.load()
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC select count(1) from bronze;
+
+# COMMAND ----------
+
 # MAGIC %md <i18n value="6fd28dc4-1516-4f6a-8478-290d366a342c"/>
 # MAGIC 
 # MAGIC 
@@ -163,7 +166,8 @@ DA.data_factory.load()
 
 # COMMAND ----------
 
-
+# MAGIC %sql
+# MAGIC select count(1) from bronze;
 
 # COMMAND ----------
 
@@ -174,7 +178,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC ACID는 Delta Lake가 가져온 데이터가 테이블 수준에서 관리되도록 보장하여 완전히 성공한 커밋만 테이블에 반영되도록 합니다. 이러한 데이터를 다른 데이터 원본과 병합하기로한 경우, 해당 원본의 데이터를 버전화하는 방법과 일관성이 보장되어야하는 종류를 알고 있어야 합니다.
 # MAGIC 
-# MAGIC 이 데모에서는 **Recordings** 에 환자 데이터를 추가하기 위해 CSV 파일을 로드합니다. 프로덕션에서는 Databricks의 <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">Auto Loader</a> 기능을 사용할 수 있습니다. Delta Lake에서 이를 통해 가장 신선한 최신 데이터를 볼 수 있습니다.
+# MAGIC 이 데모에서는 **Recordings** 에 환자 데이터(pii)를 추가하기 위해 CSV 파일을 로드합니다. 프로덕션에서는 Databricks의 <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">Auto Loader</a> 기능을 사용할 수 있습니다. Delta Lake에서 이를 통해 가장 신선한 최신 데이터를 볼 수 있습니다.
 
 # COMMAND ----------
 
@@ -270,8 +274,9 @@ DA.data_factory.load()
 # MAGIC %md <i18n value="de6370ea-e1a0-4212-98eb-53fd012e73b0"/>
 # MAGIC 
 # MAGIC 
-# MAGIC 아래 코드에서 **`.trigger(availableNow=True)`** 를 사용하고 있습니다. 이를 통해 이 작업을 한 번 트리거하여 수집 가능한 모든 데이터를 마이크로 배치로 처리하면서 Structured Streaming의 강점을 계속 사용할 수 있습니다. 요약하자면 이러한 강점은 다음과 같습니다.
-# MAGIC - 정확히 한 번 End to End 내결함성 처리
+# MAGIC 아래 코드에서는 **`.trigger(availableNow=True)`** 를 사용하고 있습니다. 이를 통해 이 작업을 한 번 트리거하여 수집 가능한 모든 데이터를 마이크로 배치로 처리하면서 Structured Streaming의 강점을 계속 사용할 수 있습니다. 
+# MAGIC 요약하자면 이러한 강점은 다음과 같습니다.
+# MAGIC - 정확히 한 번 (exactly once) end-to-end fault tolerant processing
 # MAGIC - 업스트림 데이터 소스의 변경 사항 자동 감지
 # MAGIC 
 # MAGIC 데이터가 증가하는 대략적인 속도를 알면 빠르고 비용 효율적인 처리를 위해 이 작업에 대해 사용할 클러스터의 크기를 적절하게 조정할 수 있습니다. 고객은 업데이트되는 최종 집계 테이블의 데이터의 비용과 양을 평가하고 이 작업을 실행해야 하는 빈도에 대해 정확한 정보에 입각한 결정을 내릴 수 있습니다.
@@ -297,9 +302,14 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC **`complete`** Output 모드를 사용하는 경우 로직이 실행될 때마다 테이블의 전체 상태를 다시 rewrite 합니다. 이는 집계 계산에 이상적이지만 Structured Streaming 에서는 데이터가 업스트림 로직에만 추가된다고 가정하므로 이 디렉터리에서 스트림을 읽을 수 **없습니다**.
 # MAGIC 
-# MAGIC **Note**: 특정 옵션을 설정하여 이 동작을 변경할 수 있지만 다른 제한 사항이 있습니다. 자세한 내용은 <a href="https://docs.databricks.com/delta/delta-streaming.html#ignoring-updates-and-deletes" target="_blank">Delta Streaming: Ignoring Updates and Deletes. </a>.
+# MAGIC **Note**: 특정 옵션을 설정하여 이 동작을 변경할 수 있지만 다른 제한 사항이 있습니다. 자세한 내용은 <a href="https://docs.databricks.com/delta/delta-streaming.html#ignoring-updates-and-deletes" target="_blank">Delta Streaming: Ignoring Updates and Deletes. </a>
 # MAGIC 
 # MAGIC 방금 등록한 **daily_patient_avg** 골드 테이블은 다음 쿼리를 실행할 때마다 데이터의 현재 상태에 대한 정적 읽기를 수행합니다.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select count(*) from daily_patient_avg;
 
 # COMMAND ----------
 
