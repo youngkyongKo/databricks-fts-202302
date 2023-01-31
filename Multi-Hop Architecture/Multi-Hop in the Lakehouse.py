@@ -235,7 +235,7 @@ DA.data_factory.load()
 # MAGIC %md <i18n value="f7f66dc8-f5b5-4682-bfb6-e97aab650874"/>
 # MAGIC 
 # MAGIC 
-# MAGIC Trigger another new file and wait for it propagate through both previous queries.
+# MAGIC 다음 셀을 사용하여 다른 파일을 로드하면 작성한 스트리밍 쿼리에서 즉시 감지된 변경 사항을 볼 수 있습니다.
 
 # COMMAND ----------
 
@@ -279,7 +279,7 @@ DA.data_factory.load()
 # MAGIC - 정확히 한 번 (exactly once) end-to-end fault tolerant processing
 # MAGIC - 업스트림 데이터 소스의 변경 사항 자동 감지
 # MAGIC 
-# MAGIC 데이터가 증가하는 대략적인 속도를 알면 빠르고 비용 효율적인 처리를 위해 이 작업에 대해 사용할 클러스터의 크기를 적절하게 조정할 수 있습니다. 고객은 업데이트되는 최종 집계 테이블의 데이터의 비용과 양을 평가하고 이 작업을 실행해야 하는 빈도에 대해 정확한 정보에 입각한 결정을 내릴 수 있습니다.
+# MAGIC 데이터가 증가하는 대략적인 속도를 알면 빠르고 비용 효율적인 처리를 위해 이 작업에 대해 사용할 클러스터의 크기를 적절하게 조정할 수 있습니다. 고객은 업데이트되는 최종 골드 테이블의 데이터의 비용과 양을 평가하고 이 작업을 실행해야 하는 빈도에 대해 정확한 정보에 입각한 결정을 내릴 수 있습니다.
 # MAGIC 
 # MAGIC 이 테이블을 구독하는 다운스트림 프로세스는 비용이 많이 드는 집계를 다시 실행할 필요가 없습니다. 오히려 파일을 de-serialize 하면 포함된 필드를 기반으로 하는 쿼리를 이미 집계된 이 소스에 대해 신속하게 푸시다운할 수 있습니다.
 
