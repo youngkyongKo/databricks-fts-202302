@@ -136,8 +136,10 @@ AS
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE sales_order_in_la
-COMMENT "Sales orders in LA."
+CREATE OR REFRESH LIVE TABLE sales_order_in_la(
+ CONSTRAINT order_date EXPECT (order_date > '2019-08-30') ON VIOLATION DROP ROW
+ )
+COMMENT "Sales orders in LA after August 2019"
 AS
   SELECT city, order_date, customer_id, customer_name, ordered_products_explode.curr, 
          sum(ordered_products_explode.price) as sales, 
