@@ -49,7 +49,7 @@
 # MAGIC 
 # MAGIC ## Datasets Used
 # MAGIC 
-# MAGIC 이 데모는 인위적으로 생성된 단순화된 의료 데이터를 사용합니다. 두 데이터 세트의 스키마는 다음과 같습니다. 다양한 단계에서 해당 스키마를 다뤄 보도록 할 것입니다.
+# MAGIC 이 데모는 샘플 데이터인 의료 데이터를 사용합니다. 두 데이터 세트의 스키마는 다음과 같습니다. 다양한 단계에서 해당 스키마를 다뤄 보도록 할 것입니다.
 # MAGIC 
 # MAGIC #### Recordings
 # MAGIC 기본 데이터 세트는 JSON 형식으로 제공되는 의료 기기의 심박수 데이터를 사용합니다.
@@ -274,7 +274,7 @@ DA.data_factory.load()
 # MAGIC %md <i18n value="de6370ea-e1a0-4212-98eb-53fd012e73b0"/>
 # MAGIC 
 # MAGIC 
-# MAGIC 아래 코드에서는 **`.trigger(availableNow=True)`** 를 사용하고 있습니다. 이를 통해 이 작업을 한 번 트리거하여 수집 가능한 모든 데이터를 마이크로 배치로 처리하면서 Structured Streaming의 강점을 계속 사용할 수 있습니다. 
+# MAGIC 아래 코드에서는 **`.trigger(availableNow=True)`** 를 사용하고 있습니다. 이 작업은 한 번 트리거하여 수집 가능한 모든 데이터를 마이크로 배치로 처리합니다. 배치로 한번 가져 오지만 Structured Streaming의 강점을 계속 사용할 수 있습니다. 
 # MAGIC 요약하자면 이러한 강점은 다음과 같습니다.
 # MAGIC - 정확히 한 번 (exactly once) end-to-end fault tolerant processing
 # MAGIC - 업스트림 데이터 소스의 변경 사항 자동 감지
@@ -300,7 +300,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC #### Important Considerations for complete Output with Delta
 # MAGIC 
-# MAGIC **`complete`** Output 모드를 사용하는 경우 로직이 실행될 때마다 결과 테이블의 전체 상태를 다시 rewrite 합니다. 이는 집계 계산에 이상적이지만, Structured Streaming 에서는 데이터가 업스트림 로직에만 추가된다고 가정하므로 이 디렉터리에서는 스트림을 읽을 수 **없습니다**.
+# MAGIC **`complete`** Output 모드를 사용하는 경우 로직이 실행될 때마다 결과 테이블의 전체 상태를 다시 rewrite 합니다. 이 모드에서는 결과 테이블의 모든 행이 매번 트리거될 때 마지막에 집계 계산에 대상이 됩니다.
 # MAGIC 
 # MAGIC **Note**: 특정 옵션을 설정하여 이 동작을 변경할 수 있지만 다른 제한 사항이 있습니다. 자세한 내용은 <a href="https://docs.databricks.com/delta/delta-streaming.html#ignoring-updates-and-deletes" target="_blank">Delta Streaming: Ignoring Updates and Deletes. </a>
 # MAGIC 
@@ -348,8 +348,7 @@ DA.data_factory.load(continuous=True)
 # MAGIC 
 # MAGIC 
 # MAGIC ## Wrapping Up
-# MAGIC 
-# MAGIC Finally, make sure all streams are stopped.
+# MAGIC 마지막으로 실행되고 있는 Stream 을 정지 시킵니다.
 
 # COMMAND ----------
 

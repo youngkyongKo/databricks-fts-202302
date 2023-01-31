@@ -30,7 +30,7 @@
 -- MAGIC 
 -- MAGIC ## Declare Bronze Layer Tables
 -- MAGIC 
--- MAGIC 아래에서 브론즈 레이어를 구현하는 두 개의 테이블을 선언합니다. 이것은 가장 raw 한 형태의 데이터를 나타내지만, 무기한 보존할 수 있는 형식으로 캡처되고 Delta Lake가 제공해야 하는 성능과 이점으로 쿼리됩니다.
+-- MAGIC 아래에서 브론즈 레이어를 구현하는 두 개의 테이블을 선언합니다.
 
 -- COMMAND ----------
 
@@ -39,7 +39,7 @@
 -- MAGIC 
 -- MAGIC ### sales_orders_raw
 -- MAGIC 
--- MAGIC **`sales_orders_raw`** 는 **retail-org/sales_orders** 데이터 세트에서 점진적으로 JSON 데이터를 수집합니다.
+-- MAGIC **`sales_orders_raw`** 는 **retail-org/sales_orders** 데이터 세트에서 incremental하게 JSON 데이터를 수집합니다.
 -- MAGIC 
 -- MAGIC <a herf="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">Auto Loader</a> 를 통한 증분 처리(Structured Streaming 으로 모델과 동일한 처리 사용), 아래와 같이 선언에 **`STREAMING`** 키워드를 추가해야 합니다. **`cloud_files()`** 메서드를 사용하면 Auto Loader 를 기본적으로 SQL과 함께 사용할 수 있습니다. 이 메서드는 다음 위치 매개변수를 사용합니다.
 -- MAGIC * 위에서 언급한 소스 위치
@@ -63,7 +63,7 @@ AS SELECT * FROM cloud_files("${datasets_path}/retail-org/sales_orders", "json",
 -- MAGIC 
 -- MAGIC **`customers`** 는 **retail-org/customers** 에 있는 CSV 포맷의 고객데이터를 제공합니다.
 -- MAGIC 
--- MAGIC 이 테이블은 조인 작업에서 곧 사용되어 판매 기록을 기반으로 고객 데이터를 조회합니다.
+-- MAGIC 이 테이블은 조인 작업에서 사용되어 판매 기록을 기반으로 고객 데이터를 조회합니다.
 
 -- COMMAND ----------
 
@@ -88,9 +88,7 @@ AS SELECT * FROM cloud_files("${datasets_path}/retail-org/customers/", "csv");
 -- MAGIC 
 -- MAGIC ### sales_orders_cleaned
 -- MAGIC 
--- MAGIC 여기서 우리는 order number 컬럼의 값이 null 인 레코드를 걸러내서 데이터의 품질 관리를 구현하여 customer 정보와 sales transaction 데이터를 enrich 합니다.
--- MAGIC 
--- MAGIC 이 선언은 많은 새로운 개념을 소개합니다.
+-- MAGIC 여기서 우리는 order number 컬럼의 값이 null 인 레코드를 걸러내서 데이터의 품질 관리를 구현하여 customer 정보와 sales transaction 데이터를 정제 합니다.
 -- MAGIC 
 -- MAGIC #### Quality Control
 -- MAGIC 
