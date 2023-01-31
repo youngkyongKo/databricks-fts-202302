@@ -176,7 +176,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC ### Load Static Lookup Table
 # MAGIC 
-# MAGIC ACID는 Delta Lake가 가져온 데이터가 테이블 수준에서 관리되도록 보장하여 완전히 성공한 커밋만 테이블에 반영되도록 합니다. 이러한 데이터를 다른 데이터 원본과 병합하기로한 경우, 해당 원본의 데이터를 버전화하는 방법과 일관성이 보장되어야하는 종류를 알고 있어야 합니다.
+# MAGIC ACID는 Delta Lake가 처리한 데이터가 테이블 레벨에서 관리되고 완결성이 보장되어서 완전히 성공한 커밋만 테이블에 반영되도록 합니다. 데이터를 다른 데이터의 원본과 Merge 하기로한 경우, 해당 원본의 데이터의 버전과 일관성이 보장되어야 하는 것을 알고 있어야 합니다.
 # MAGIC 
 # MAGIC 이 데모에서는 **Recordings** 에 환자 데이터(pii)를 추가하기 위해 CSV 파일을 로드합니다. 프로덕션에서는 Databricks의 <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">Auto Loader</a> 기능을 사용할 수 있습니다. Delta Lake에서 이를 통해 가장 신선한 최신 데이터를 볼 수 있습니다.
 
@@ -300,7 +300,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC #### Important Considerations for complete Output with Delta
 # MAGIC 
-# MAGIC **`complete`** Output 모드를 사용하는 경우 로직이 실행될 때마다 테이블의 전체 상태를 다시 rewrite 합니다. 이는 집계 계산에 이상적이지만 Structured Streaming 에서는 데이터가 업스트림 로직에만 추가된다고 가정하므로 이 디렉터리에서 스트림을 읽을 수 **없습니다**.
+# MAGIC **`complete`** Output 모드를 사용하는 경우 로직이 실행될 때마다 결과 테이블의 전체 상태를 다시 rewrite 합니다. 이는 집계 계산에 이상적이지만, Structured Streaming 에서는 데이터가 업스트림 로직에만 추가된다고 가정하므로 이 디렉터리에서는 스트림을 읽을 수 **없습니다**.
 # MAGIC 
 # MAGIC **Note**: 특정 옵션을 설정하여 이 동작을 변경할 수 있지만 다른 제한 사항이 있습니다. 자세한 내용은 <a href="https://docs.databricks.com/delta/delta-streaming.html#ignoring-updates-and-deletes" target="_blank">Delta Streaming: Ignoring Updates and Deletes. </a>
 # MAGIC 
@@ -320,7 +320,7 @@ DA.data_factory.load()
 
 # MAGIC %md <i18n value="bcca7247-9716-44ed-8424-e72170f0a2dc"/>
 # MAGIC 
-# MAGIC 위의 테이블에는 모든 사용자의 모든 날짜가 포함되어 있습니다. Adoc 쿼리에 대한 predicate가 여기에 인코딩된 데이터와 일치하는 경우 소스의 파일에 predicate를 푸시하고 보다 제한된 집계 보기를 매우 빠르게 생성할 수 있습니다
+# MAGIC 위의 테이블에는 모든 사용자의 모든 날짜가 포함되어 있습니다. Adoc 쿼리를 사용하여 특정 날짜를 predicate 하여 조회 하실 수 있습니다.
 
 # COMMAND ----------
 
@@ -336,7 +336,7 @@ DA.data_factory.load()
 # MAGIC 
 # MAGIC ## Process Remaining Records
 # MAGIC 
-# MAGIC 다음 셀은 나머지 2020년 전체 데이터를 소스 디렉터리에 추가 로드합니다. Delta Lake에서 처음 만든 3개 테이블을 통해 이러한 프로세스를 볼 수 있지만 **`daily_patient_avg`** 테이블을 업데이트하려면 마지막 쿼리를 다시 실행해야 합니다. 이 쿼리는 (**`.trigger(availableNow=True)`**) 구문을 사용하고 있기 때문입니다.
+# MAGIC 다음 셀은 나머지 2020년 전체 데이터를 소스 디렉터리에 추가 로드합니다. Delta Lake에서 처음 만든 3개 테이블을 통해 이러한 프로세스를 볼 수 있지만 **`daily_patient_avg`** 테이블을 업데이트하려면 마지막 쿼리를 다시 실행해야 합니다. (**`.trigger(availableNow=True)`**) 구문을 사용하고 있기 때문에 전체 상태를 rewrite 해야 하기 때문입니다.
 
 # COMMAND ----------
 
