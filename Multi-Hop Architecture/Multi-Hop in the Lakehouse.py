@@ -361,7 +361,7 @@ DA.cleanup()
 # MAGIC 
 # MAGIC ## Summary
 # MAGIC 
-# MAGIC Delta Lake와 Structured Streaming이 결합되어 레이크하우스의 데이터에 대한 준 실시간 분석 액세스를 제공합니다.
+# MAGIC Delta Lake와 Structured Streaming이 결합되어 레이크하우스의 데이터에 대한 준 실시간(near-real time) 분석 액세스를 제공합니다.
 
 # COMMAND ----------
 

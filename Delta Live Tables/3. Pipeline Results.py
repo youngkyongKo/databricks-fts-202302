@@ -20,7 +20,7 @@ display(files)
 # MAGIC %md <i18n value="4b109d6f-b0d4-4ded-ac54-a12f722599a9"/>
 # MAGIC 
 # MAGIC 
-# MAGIC **`system`** 디렉토리는 파이프라인과 관련된 이벤트를 캡처합니다.
+# MAGIC **`system`** 디렉토리에는 파이프라인과 관련된 이벤트를 캡처합니다.
 
 # COMMAND ----------
 
