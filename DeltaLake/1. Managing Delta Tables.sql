@@ -27,6 +27,8 @@
 -- MAGIC ## 실습 환경 셋업
 -- MAGIC <br>
 -- MAGIC 먼저 아래 setup 스크립트를 실행합니다. 이 스크립트는 username, userhome, database 등 실습 환경을 세팅합니다.
+-- MAGIC 
+-- MAGIC **NOTE**: `%run` 은 다른 노트북을 실행하는 매직커맨드입니다. 코드를 모듈화하는 용도로 사용할 수 있습니다.
 
 -- COMMAND ----------
 
@@ -142,7 +144,7 @@ WHERE value > 6
 -- MAGIC 
 -- MAGIC Databricks에서는 **MERGE** 문을 이용하여 upsert (데이터의 Update, Insert 및 기타 데이터 조작을 하나의 명령어로 수행)를 처리할 수 있습니다. 
 -- MAGIC 
--- MAGIC 아래의 예제에서는 변경사항을 기록하는 CDC(Change Data Capture) 로그 데이터를 updates라는 임시 뷰로 생성합니다. 
+-- MAGIC 아래의 예제는 운영계 DB 테이블의 변경사항을 데이터레이크의 테이블에 반영하기 위해, CDC(Change Data Capture) 로그 데이터를 데이터레이크에 적재한 후 임시 View로 읽어들였다고 가정합니다.
 
 -- COMMAND ----------
 

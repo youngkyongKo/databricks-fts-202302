@@ -298,7 +298,11 @@ SET spark.databricks.delta.retentionDurationCheck.enabled = false;
 SET spark.databricks.delta.vacuum.logging.enabled = true;
 
 -- DRY RUN 을 이용하여 VACUUM 실행시 삭제될 파일들을 미리 파악할 수 있습니다.   
--- VACUUM students RETAIN 0 HOURS DRY RUN
+VACUUM students RETAIN 0 HOURS DRY RUN
+
+-- COMMAND ----------
+
+-- VACUUM 을 실제 실행합니다.
 VACUUM students RETAIN 0 HOURS
 
 -- COMMAND ----------
